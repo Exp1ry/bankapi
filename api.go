@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -47,7 +48,17 @@ func (s *APIServer) handleAccount(c *fiber.Ctx) error {
 }
 func (s *APIServer) handleGetAccount(c *fiber.Ctx) error {
 	queries := c.Params("id")
-	return WriteJSON(c, fiber.StatusOK, queries)
+
+	queriesStr, err := strconv.Atoi(queries)
+	if err != nil {
+		return err
+	}
+	accReq, err := s.Store.GetAccountByID(queriesStr)
+	if err != nil {
+		return err
+	}
+
+	return WriteJSON(c, fiber.StatusOK, accReq)
 }
 
 func (s *APIServer) handleCreateAccount(c *fiber.Ctx) error {
@@ -55,8 +66,8 @@ func (s *APIServer) handleCreateAccount(c *fiber.Ctx) error {
 	if err := json.Unmarshal(c.Body(), accReq); err != nil {
 		return err
 	}
-	account := NewAccount(accReq.FirstName, accReq.LastName)
-	if err := s.Store.CreateAccount(account); err != nil {
+	account := NewAccount(accReq.Type, accReq.Name, accReq.Location, accReq.City, accReq.Phone, accReq.ProductsAndServices)
+	if err := s.Store.CreateCompany(account); err != nil {
 		return err
 	}
 	return WriteJSON(c, fiber.StatusOK, account)
